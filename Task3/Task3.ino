@@ -14,12 +14,17 @@ int revolutionSteps = MotorStepsPerRevolution;
 int currentFloor = 0;
 int targetFloor = 0;
   //Representing the current elevator status
-bool isGoingup = 0;  
+bool isGoingup = 1;  
 bool isIdle = 1;
   //These arrays represent the status of the floors called or not while going up or going down
   //Initially all the floors are not called
-bool goinguptargets[] = {0,0,0,0,1,0,1,0};
-bool goingdowntargets[] = {1,0,0,0,0,0,0,0}; 
+bool goinguptargets[] = {0,0,1,0,1,0,1,0};
+bool goingdowntargets[] = {0,0,1,0,0,0,0,0};
+bool isDestinationReached = 0;
+//variables for delays
+bool isWaitEnterExitSet = 0;
+unsigned long waitEnterExitStart = 0;
+unsigned long waitEnterExitCurrent = 0; 
 
 void setup() {
 //keypad pins
@@ -43,31 +48,50 @@ void loop() {
   
   //printing on sevensegments
   Display(currentFloor);
-  
+
   //Motor movement
   //The elevator hasn't reached its destination
   if(currentFloor != targetFloor){
-    if(revolutionSteps != 0){
-      if(isGoingup == 1){
-        currentStep++;
+    //If the elevator reached its destination it should wait for one second
+    if((waitEnterExitCurrent - waitEnterExitStart < 1000) && isDestinationReached){
+      waitEnterExitCurrent = millis();
+    }
+    //else the elevator should move
+    else{
+      isDestinationReached = 0;
+      isWaitEnterExitSet = 0;
+      
+      if(revolutionSteps != 0){
+        if(isGoingup == 1){
+          currentStep++;
+        }
+        else{
+          (currentStep >= 1)? currentStep--: currentStep = 3;
+        }
+        moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
+        revolutionSteps--;           
       }
       else{
-        (currentStep >= 1)? currentStep--: currentStep = 3;
+        //compeleted one revolution either going up or down
+        (isGoingup == 1)? currentFloor++ : currentFloor--;
+        //reset counting the steps for a new revolution
+        revolutionSteps = MotorStepsPerRevolution;
       }
-      moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
-      revolutionSteps--;           
-    }
-    else{
-      //compeleted one revolution either going up or down
-      (isGoingup == 1)? currentFloor++ : currentFloor--;
-      //reset counting the steps for a new revolution
-      revolutionSteps = MotorStepsPerRevolution;
     }
   }
+  
   //The elevator has reached its destination
   else{
-    //temporary delay to test only
-    delay(1000);
+    if(!isWaitEnterExitSet){
+      //Start waiting for one second
+      waitEnterExitStart = millis();
+      waitEnterExitCurrent = millis();
+      isDestinationReached = 1;
+      isWaitEnterExitSet = 1;
+      //Reset the currentfloor state to not called
+      (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
+    }
+        
     //Check the new target of the elevator
     if(isGoingup){
       //Check if there are more floors called above

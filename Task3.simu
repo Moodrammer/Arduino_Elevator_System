@@ -1,0 +1,27 @@
+<circuit type="simulide_0.1" noLinStep="10" animate="0" speed="1000000" reactStep="50" noLinAcc="5">
+ 
+Arduino Uno-5: 
+<item id="Arduino Uno-5" hflip="1" Show_id="true" vflip="1" rotation="0" Ser_Monitor="false" valLabRot="0" Mhz="16" y="-444" Logic_Symbol="false" Ser_Port="false" eeprom="" Program="" labely="-21" valLabelx="0" objectName="Arduino Uno-5" itemtype="Arduino" x="-228" valLabely="0" labelx="100" labelrot="0"/>
+ 
+7-Seg BCD-4: 
+<item labely="-24" labelrot="0" valLabRot="0" vflip="1" objectName="7-Seg BCD-4" rotation="0" valLabely="0" Show_id="false" id="7-Seg BCD-4" valLabelx="0" labelx="-16" x="-332" itemtype="7-Seg BCD" y="-436" hflip="1"/>
+ 
+Connector-6: 
+<item id="Connector-6" hflip="1" Show_id="false" startpinid="Arduino Uno-5-PB0" vflip="1" rotation="0" enodeid="enode-6" endpinid="7-Seg BCD-4-in0" valLabRot="0" y="-356" labely="-24" valLabelx="0" pointList="-220,-356,-316,-356,-316,-404" objectName="Connector-6" itemtype="Connector" x="-220" valLabely="0" labelx="-16" labelrot="0"/>
+ 
+Connector-7: 
+<item id="Connector-7" hflip="1" Show_id="false" startpinid="Arduino Uno-5-PB1" vflip="1" rotation="0" enodeid="enode-7" endpinid="7-Seg BCD-4-in1" valLabRot="0" y="-348" labely="-24" valLabelx="0" pointList="-220,-348,-324,-348,-324,-404" objectName="Connector-7" itemtype="Connector" x="-220" valLabely="0" labelx="-16" labelrot="0"/>
+ 
+Connector-8: 
+<item id="Connector-8" hflip="1" Show_id="false" startpinid="Arduino Uno-5-PB2" vflip="1" rotation="0" enodeid="enode-8" endpinid="7-Seg BCD-4-in2" valLabRot="0" y="-340" labely="-24" valLabelx="0" pointList="-220,-340,-332,-340,-332,-404" objectName="Connector-8" itemtype="Connector" x="-220" valLabely="0" labelx="-16" labelrot="0"/>
+ 
+Connector-9: 
+<item id="Connector-9" hflip="1" Show_id="false" startpinid="Arduino Uno-5-PB3" vflip="1" rotation="0" enodeid="enode-9" endpinid="7-Seg BCD-4-in3" valLabRot="0" y="-332" labely="-24" valLabelx="0" pointList="-220,-332,-340,-332,-340,-404" objectName="Connector-9" itemtype="Connector" x="-220" valLabely="0" labelx="-16" labelrot="0"/>
+ 
+PlotterWidget-50: 
+<item minimumSizeHint="" enabled="true" minimumSize="" acceptDrops="false" sizePolicy="" maximumHeight="200" fullScreen="false" y="505" accessibleDescription="" layoutDirection="0" geometry="" windowModality="0" visible="false" frameGeometry="" modal="false" toolTip="" minimumWidth="200" normalGeometry="" height="200" locale="" windowIcon="" windowOpacity="1" pos="" cursor="" sizeHint="" objectName="PlotterWidget-50" focusPolicy="0" autoFillBackground="false" mouseTracking="false" font="Sans Serif,9,-1,5,50,0,0,0,0,0" minimumHeight="200" width="585" windowIconText="" palette="" minimized="false" itemtype="Plotter" statusTip="" MaxVolt="500" baseSize="" x="0" toolTipDuration="-1" updatesEnabled="true" childrenRect="" rect="" whatsThis="" windowFilePath="" MinVolt="0" contextMenuPolicy="1" Tracks="1" size="" focus="false" windowModified="false" Scale="1" frameSize="" childrenRegion="" inputMethodHints="0" windowTitle="" accessibleName="" styleSheet="" maximumWidth="1000" sizeIncrement="" maximized="false" maximumSize="" isActiveWindow="true"/>
+ 
+SerialPortWidget-51: 
+<item minimumSizeHint="" enabled="true" minimumSize="" acceptDrops="false" sizePolicy="" maximumHeight="170" fullScreen="false" y="579" accessibleDescription="" layoutDirection="0" geometry="" windowModality="0" visible="false" frameGeometry="" modal="false" toolTip="" minimumWidth="0" normalGeometry="" height="126" locale="" windowIcon="" windowOpacity="1" pos="" cursor="" sizeHint="" objectName="SerialPortWidget-51" focusPolicy="0" autoFillBackground="false" mouseTracking="false" font="Sans Serif,9,-1,5,50,0,0,0,0,0" minimumHeight="0" width="450" windowIconText="" palette="" minimized="false" itemtype="SerialPort" statusTip="" baseSize="" x="67" toolTipDuration="-1" updatesEnabled="true" childrenRect="" rect="" whatsThis="" windowFilePath="" contextMenuPolicy="1" size="" SettingsProp="COM1,0,3,0,0,0" focus="false" windowModified="false" frameSize="" childrenRegion="" inputMethodHints="0" windowTitle="Configuracion" accessibleName="" styleSheet="" maximumWidth="450" sizeIncrement="" maximized="false" maximumSize="" isActiveWindow="true"/>
+ 
+</circuit>

@@ -9,8 +9,17 @@ bool iskeyread = 0;
 int keypad[] = {0,1,2,3,4,5,6,7};
 //Motor variables
 int currentStep = 0;
+int revolutionSteps = MotorStepsPerRevolution;
 //Elevator variables
-int currentFloor = 1;
+int currentFloor = 0;
+int targetFloor = 0;
+  //Representing the current elevator status
+bool isGoingup = 0;  
+bool isIdle = 1;
+  //These arrays represent the status of the floors called or not while going up or going down
+  //Initially all the floors are not called
+bool goinguptargets[] = {0,0,0,0,1,0,1,0};
+bool goingdowntargets[] = {1,0,0,0,0,0,0,0}; 
 
 void setup() {
 //keypad pins
@@ -31,14 +40,79 @@ void loop() {
     //Do some logic 
     Serial.print(keyPressed);
   }
-  //BCD 10 11 12   encoder 7 8 9 
-   digitalWrite(12, currentFloor & 1);
-   digitalWrite(11, currentFloor & 2);
-   digitalWrite(10, currentFloor & 4);
-  //Motor testing
-  currentStep++;
-  moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000); 
+  
+  //printing on sevensegments
+  Display(currentFloor);
+  
+  //Motor movement
+  //The elevator hasn't reached its destination
+  if(currentFloor != targetFloor){
+    if(revolutionSteps != 0){
+      if(isGoingup == 1){
+        currentStep++;
+      }
+      else{
+        (currentStep >= 1)? currentStep--: currentStep = 3;
+      }
+      moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
+      revolutionSteps--;           
+    }
+    else{
+      //compeleted one revolution either going up or down
+      (isGoingup == 1)? currentFloor++ : currentFloor--;
+      //reset counting the steps for a new revolution
+      revolutionSteps = MotorStepsPerRevolution;
+    }
+  }
+  //The elevator has reached its destination
+  else{
+    //temporary delay to test only
+    delay(1000);
+    //Check the new target of the elevator
+    if(isGoingup){
+      //Check if there are more floors called above
+      for(int i = currentFloor + 1; i <= 7; i++){
+        if(goinguptargets[i] == 1){
+          targetFloor = i;
+          break; 
+        }
+      }
+      //Didn't find an upper target so search for a lower target  
+      if(currentFloor == targetFloor){
+        for(int i = currentFloor - 1; i >= 0; i--){
+          if(goingdowntargets[i] == 1){
+            targetFloor = i;
+            //set the status to going down
+            isGoingup = 0;
+            break; 
+          }   
+        }
+      }
+   }
+  //The elevator is going down
+  else{
+    //check if there are more floors called below the currentfloor
+    for(int i = currentFloor - 1; i >= 0; i--){
+      if(goingdowntargets[i] == 1){
+        targetFloor = i;
+        break; 
+      }   
+    }
+    //if there are no targets below see if there is a called target above
+    if(currentFloor == targetFloor){
+      for(int i = currentFloor + 1; i <= 7; i++){
+        if(goinguptargets[i] == 1){
+          targetFloor = i;
+          //set the status to going up
+          isGoingup = 1;
+          break;
+        }
+      }      
+    }
+
+  }
   //Todo: -Setting an interrupt that is activated when the user pushes a button to start counting the number of milliseconds passed 
+  }
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 // Dealing with Keypad functions
@@ -112,4 +186,13 @@ void moveMotor(int Ap, int Am, int Bp, int Bm, int currentStep, int stepWait){
     digitalWrite(Am, 1);
     digitalWrite(Bm, 0);
    }
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Displaying on sevenSegment
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void Display(int currentFloor){
+  //BCD 10 11 12   encoder 7 8 9 
+   digitalWrite(12, currentFloor & 1);
+   digitalWrite(11, currentFloor & 2);
+   digitalWrite(10, currentFloor & 4);  
 }

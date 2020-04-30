@@ -1,11 +1,24 @@
 #define keypadColumnSize 2
+#define MotorAplus 6
+#define MotorBplus 5
+#define MotorAminus 4
+#define MotorBminus 1
+#define MotorStepsPerRevolution 32 
+//keypad varibles
 bool iskeyread = 0;
 int keypad[] = {0,1,2,3,4,5,6,7};
+//Motor variables
+int currentStep = 0;
+//Elevator variables
+int currentFloor = 1;
 
 void setup() {
 //keypad pins
   for(int i = 14; i <= 19; i++) 
   (i< 18)? pinMode(i, OUTPUT): pinMode(i, INPUT_PULLUP);
+//Motor pins
+  for(int i = MotorAminus; i <= MotorAplus; i++) pinMode(i, OUTPUT);
+  pinMode(MotorBminus, OUTPUT);  
 //BCD seven segment pins
   Serial.begin(9600);
   for(int i = 10; i <= 12; i++) pinMode(i, OUTPUT);
@@ -19,9 +32,12 @@ void loop() {
     Serial.print(keyPressed);
   }
   //BCD 10 11 12   encoder 7 8 9 
-   digitalWrite(12, digitalRead(9));
-   digitalWrite(11, digitalRead(8));
-   digitalWrite(10, digitalRead(7));
+   digitalWrite(12, currentFloor & 1);
+   digitalWrite(11, currentFloor & 2);
+   digitalWrite(10, currentFloor & 4);
+  //Motor testing
+  currentStep++;
+  moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000); 
   //Todo: -Setting an interrupt that is activated when the user pushes a button to start counting the number of milliseconds passed 
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -61,3 +77,39 @@ int scanRows(int columnNumber){
   }
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
+// Stepper Motor function
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Move the stepper motor
+void moveMotor(int Ap, int Am, int Bp, int Bm, int currentStep, int stepWait){
+  currentStep %= 4;
+  unsigned long waitStart = micros();
+  while(micros() - waitStart < stepWait) {} 
+  switch(currentStep){
+    case 0:
+    digitalWrite(Ap, 1);
+    digitalWrite(Bp, 1);
+    digitalWrite(Am, 0);
+    digitalWrite(Bm, 0);
+    break;
+  
+    case 1:
+    digitalWrite(Ap, 1);
+    digitalWrite(Bp, 0);
+    digitalWrite(Am, 0);
+    digitalWrite(Bm, 1);
+    break;
+  
+    case 2:
+    digitalWrite(Ap, 0);
+    digitalWrite(Bp, 0);
+    digitalWrite(Am, 1);
+    digitalWrite(Bm, 1);
+    break;
+  
+    case 3:
+    digitalWrite(Ap, 0);
+    digitalWrite(Bp, 1);
+    digitalWrite(Am, 1);
+    digitalWrite(Bm, 0);
+   }
+}

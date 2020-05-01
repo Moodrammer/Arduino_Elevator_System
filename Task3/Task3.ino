@@ -4,7 +4,9 @@
 #define MotorAminus 17
 #define MotorBminus 16
 #define switchTrigger 2
-#define MotorStepsPerRevolution 32 
+#define MotorStepsPerRevolution 32
+#define weightLimit 70
+#define LedPin 14 
 //keypad varibles
 bool iskeyread = 0;
 int keypad[] = {0,1,2,3,4,5,6,7};
@@ -33,6 +35,8 @@ int pushedSwitch = 0;
 bool isSwitchwaitset = 0;
 bool switchwaitSet = 0;
 bool switchwaitCheck = 0;
+//weightsensor variables
+bool stopElevator = 0;
 
 void setup() {
 //keypad pins and switches
@@ -46,7 +50,9 @@ void setup() {
 //BCD seven segment pins
   Serial.begin(9600);
   for(int i = 10; i <= 12; i++) pinMode(i, OUTPUT);
-  }
+//LedPin
+  pinMode(LedPin, OUTPUT);      
+}
 
 void loop() {
   //always store the current milliseconds at the beggining of each loop cycle
@@ -66,110 +72,116 @@ void loop() {
     switchwaitCheck = 0;
   }
   
-  //testing the keypad
+  //Scanning the keypad
   int keyPressed = scanKeypad();
   if(keyPressed != -1){
     //set the new target floor
     Serial.println(keyPressed);
     settargetFloor(keyPressed);
   }
+
+  //checking the weight sensor reading
+  checkCurrentWeight(analogRead(A1));
   
   //printing on sevensegments
   Display(currentFloor);
 
   //Motor movement
+  if(!stopElevator){
   //The elevator hasn't reached its destination
-  if(currentFloor != targetFloor){
-    //If the elevator reached its destination it should wait for one second
-    if((waitEnterExitcurrent - waitEnterExitStart < 1000) && isDestinationReached){
-      waitEnterExitcurrent = millis();
-    }
-    //The elevator is moving
-    else{
-      isDestinationReached = 0;
-      isWaitEnterExitSet = 0;
-      
-      if(revolutionSteps != 0){
-        if(isGoingup == 1){
-          currentStep++;
+    if(currentFloor != targetFloor){
+      //If the elevator reached its destination it should wait for one second
+      if((waitEnterExitcurrent - waitEnterExitStart < 1000) && isDestinationReached){
+        waitEnterExitcurrent = millis();
+      }
+      //The elevator is moving
+      else{
+        isDestinationReached = 0;
+        isWaitEnterExitSet = 0;
+        
+        if(revolutionSteps != 0){
+          if(isGoingup == 1){
+            currentStep++;
+          }
+          else{
+            (currentStep >= 1)? currentStep--: currentStep = 3;
+          }
+          isIdle = 0;
+          moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
+          revolutionSteps--;           
         }
         else{
-          (currentStep >= 1)? currentStep--: currentStep = 3;
+          //compeleted one revolution either going up or down
+          (isGoingup == 1)? currentFloor++ : currentFloor--;
+          //reset counting the steps for a new revolution
+          revolutionSteps = MotorStepsPerRevolution;
         }
-        isIdle = 0;
-        moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
-        revolutionSteps--;           
-      }
-      else{
-        //compeleted one revolution either going up or down
-        (isGoingup == 1)? currentFloor++ : currentFloor--;
-        //reset counting the steps for a new revolution
-        revolutionSteps = MotorStepsPerRevolution;
       }
     }
-  }
-  
-  //The elevator has reached its destination
-  else{
-    if(!isWaitEnterExitSet){
-      //Start waiting for one second
-      waitEnterExitStart = millis();
-      waitEnterExitcurrent = millis();
-      isDestinationReached = 1;
-      isWaitEnterExitSet = 1;
-      isIdle = 1;
-      //Reset the currentfloor state to not called
-      (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
-    }
-        
-    //Check the new target of the elevator
-    if(isGoingup){
-      //Check if there are more floors called above
-      for(int i = currentFloor + 1; i <= 7; i++){
-        if(goinguptargets[i] == 1){
+    
+    //The elevator has reached its destination
+    else{
+      if(!isWaitEnterExitSet){
+        //Start waiting for one second
+        waitEnterExitStart = millis();
+        waitEnterExitcurrent = millis();
+        isDestinationReached = 1;
+        isWaitEnterExitSet = 1;
+        isIdle = 1;
+        //Reset the currentfloor state to not called
+        (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
+      }
+          
+      //Check the new target of the elevator
+      if(isGoingup){
+        //Check if there are more floors called above
+        for(int i = currentFloor + 1; i <= 7; i++){
+          if(goinguptargets[i] == 1){
+            targetFloor = i;
+            isIdle = 0;
+            break; 
+          }
+        }
+        //Didn't find an upper target so search for a lower target  
+        if(currentFloor == targetFloor){
+          for(int i = currentFloor - 1; i >= 0; i--){
+            if(goingdowntargets[i] == 1){
+              targetFloor = i;
+              isIdle = 0;
+              //set the status to going down
+              isGoingup = 0;
+              break; 
+            }   
+          }
+        }
+     }
+    //The elevator is going down
+    else{
+      //check if there are more floors called below the currentfloor
+      for(int i = currentFloor - 1; i >= 0; i--){
+        if(goingdowntargets[i] == 1){
           targetFloor = i;
           isIdle = 0;
           break; 
-        }
+        }   
       }
-      //Didn't find an upper target so search for a lower target  
+      //if there are no targets below see if there is a called target above
       if(currentFloor == targetFloor){
-        for(int i = currentFloor - 1; i >= 0; i--){
-          if(goingdowntargets[i] == 1){
+        for(int i = currentFloor + 1; i <= 7; i++){
+          if(goinguptargets[i] == 1){
             targetFloor = i;
             isIdle = 0;
-            //set the status to going down
-            isGoingup = 0;
-            break; 
-          }   
-        }
+            //set the status to going up
+            isGoingup = 1;
+            break;
+          }
+        }      
       }
-   }
-  //The elevator is going down
-  else{
-    //check if there are more floors called below the currentfloor
-    for(int i = currentFloor - 1; i >= 0; i--){
-      if(goingdowntargets[i] == 1){
-        targetFloor = i;
-        isIdle = 0;
-        break; 
-      }   
+  
     }
-    //if there are no targets below see if there is a called target above
-    if(currentFloor == targetFloor){
-      for(int i = currentFloor + 1; i <= 7; i++){
-        if(goinguptargets[i] == 1){
-          targetFloor = i;
-          isIdle = 0;
-          //set the status to going up
-          isGoingup = 1;
-          break;
-        }
-      }      
-    }
-
+    }    
   }
-  }
+  
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 // Dealing with Keypad functions
@@ -315,5 +327,21 @@ void settargetFloor(int target){
     else if(target >= currentFloor){
       goinguptargets[target] = 1;
     }
+  }
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Checking the current weight inside the elevator
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void checkCurrentWeight(int sensorReading){
+  //map the sensor reading to a value between 0 and 100 kg
+  sensorReading = map(sensorReading, 0, 1023, 0, 100);
+  //check if the reading passed the limited weight
+  if(sensorReading > weightLimit){
+    digitalWrite(LedPin, 1);
+    stopElevator = 1; 
+  }
+  else{
+    digitalWrite(LedPin, 0);
+    stopElevator = 0;
   }
 }

@@ -18,8 +18,8 @@ bool isGoingup = 1;
 bool isIdle = 1;
   //These arrays represent the status of the floors called or not while going up or going down
   //Initially all the floors are not called
-bool goinguptargets[] = {0,0,1,0,1,0,1,0};
-bool goingdowntargets[] = {0,0,1,0,0,0,0,0};
+bool goinguptargets[] = {0,0,0,0,0,0,0,0};
+bool goingdowntargets[] = {0,0,0,0,0,0,0,0};
 bool isDestinationReached = 0;
 //variables for delays
 bool isWaitEnterExitSet = 0;
@@ -42,8 +42,9 @@ void loop() {
   //testing the keypad
   int keyPressed = scanKeypad();
   if(keyPressed != -1){
-    //Do some logic 
-    Serial.print(keyPressed);
+    //set the new target floor
+    Serial.println(keyPressed);
+    settargetFloor(keyPressed);
   }
   
   //printing on sevensegments
@@ -68,6 +69,7 @@ void loop() {
         else{
           (currentStep >= 1)? currentStep--: currentStep = 3;
         }
+        isIdle = 0;
         moveMotor(MotorAplus, MotorAminus, MotorBplus, MotorBminus, currentStep, 20000);
         revolutionSteps--;           
       }
@@ -88,6 +90,7 @@ void loop() {
       waitEnterExitCurrent = millis();
       isDestinationReached = 1;
       isWaitEnterExitSet = 1;
+      isIdle = 1;
       //Reset the currentfloor state to not called
       (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
     }
@@ -98,6 +101,7 @@ void loop() {
       for(int i = currentFloor + 1; i <= 7; i++){
         if(goinguptargets[i] == 1){
           targetFloor = i;
+          isIdle = 0;
           break; 
         }
       }
@@ -106,6 +110,7 @@ void loop() {
         for(int i = currentFloor - 1; i >= 0; i--){
           if(goingdowntargets[i] == 1){
             targetFloor = i;
+            isIdle = 0;
             //set the status to going down
             isGoingup = 0;
             break; 
@@ -119,6 +124,7 @@ void loop() {
     for(int i = currentFloor - 1; i >= 0; i--){
       if(goingdowntargets[i] == 1){
         targetFloor = i;
+        isIdle = 0;
         break; 
       }   
     }
@@ -127,6 +133,7 @@ void loop() {
       for(int i = currentFloor + 1; i <= 7; i++){
         if(goinguptargets[i] == 1){
           targetFloor = i;
+          isIdle = 0;
           //set the status to going up
           isGoingup = 1;
           break;
@@ -219,4 +226,53 @@ void Display(int currentFloor){
    digitalWrite(12, currentFloor & 1);
    digitalWrite(11, currentFloor & 2);
    digitalWrite(10, currentFloor & 4);  
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//Setting the targetfloor according to the switches
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void settargetFloor(int target){
+  if(isIdle){
+    if(target < currentFloor){
+      goingdowntargets[target] = 1;
+      targetFloor = target;
+      isGoingup = 0;
+    }
+    else if (target > currentFloor){
+      goinguptargets[target] = 1;
+      targetFloor = target;
+      isGoingup = 1;
+    }
+  }
+  else if(isGoingup){
+    //if the elevator didn't pass the targetfloor yet set its status to called to be set as the new target
+    if(target > currentFloor && target < targetFloor){
+      goinguptargets[target] = 1;
+      //set the new target to stop at
+      targetFloor = target;
+      isGoingup = 1;
+    }
+    else if(target > currentFloor && target > targetFloor){
+      goinguptargets[target] = 1;
+      isGoingup = 1;
+    }
+    else if(target <= currentFloor){
+      goingdowntargets[target] = 1;
+    }
+  }
+  //if the elevator is going down
+  else{
+    if(target < currentFloor && target > targetFloor){
+      //set the new target to stop at
+      goingdowntargets[target] = 1;
+      targetFloor = target;
+      isGoingup = 0;
+    }
+    else if (target < currentFloor && target < targetFloor){
+      goingdowntargets[target] = 1;
+      isGoingup = 0;
+    }
+    else if(target >= currentFloor){
+      goinguptargets[target] = 1;
+    }
+  }
 }

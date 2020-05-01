@@ -3,6 +3,7 @@
 #define MotorBplus 5
 #define MotorAminus 4
 #define MotorBminus 1
+#define switchTrigger 2
 #define MotorStepsPerRevolution 32 
 //keypad varibles
 bool iskeyread = 0;
@@ -24,12 +25,20 @@ bool isDestinationReached = 0;
 //variables for delays
 bool isWaitEnterExitSet = 0;
 unsigned long waitEnterExitStart = 0;
-unsigned long waitEnterExitCurrent = 0; 
+unsigned long waitEnterExitcurrent = 0; 
+unsigned long CurrentTime = 0;
+//variables for switches
+unsigned long switchWaitStart = 0;
+int pushedSwitch = 0;
+bool isSwitchwaitset = 0;
+bool switchwaitSet = 0;
+bool switchwaitCheck = 0;
 
 void setup() {
-//keypad pins
+//keypad pins and switches
   for(int i = 14; i <= 19; i++) 
   (i< 18)? pinMode(i, OUTPUT): pinMode(i, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(switchTrigger), pushSwitch, CHANGE);
 //Motor pins
   for(int i = MotorAminus; i <= MotorAplus; i++) pinMode(i, OUTPUT);
   pinMode(MotorBminus, OUTPUT);  
@@ -39,6 +48,23 @@ void setup() {
   }
 
 void loop() {
+  //always store the current milliseconds at the beggining of each loop cycle
+  CurrentTime = millis();
+  
+  if(!isSwitchwaitset && switchwaitSet){
+    //take a snap of the current time
+    switchWaitStart = CurrentTime;
+    isSwitchwaitset = 1;
+  }
+  if(switchwaitCheck){
+    //if the time passed 200 ms set the new target
+    if(CurrentTime - switchWaitStart > 200) settargetFloor(pushedSwitch);
+    //resest the flags
+    isSwitchwaitset = 0;
+    switchwaitSet = 0;
+    switchwaitCheck = 0;
+  }
+  
   //testing the keypad
   int keyPressed = scanKeypad();
   if(keyPressed != -1){
@@ -54,10 +80,10 @@ void loop() {
   //The elevator hasn't reached its destination
   if(currentFloor != targetFloor){
     //If the elevator reached its destination it should wait for one second
-    if((waitEnterExitCurrent - waitEnterExitStart < 1000) && isDestinationReached){
-      waitEnterExitCurrent = millis();
+    if((waitEnterExitcurrent - waitEnterExitStart < 1000) && isDestinationReached){
+      waitEnterExitcurrent = millis();
     }
-    //else the elevator should move
+    //The elevator is moving
     else{
       isDestinationReached = 0;
       isWaitEnterExitSet = 0;
@@ -87,7 +113,7 @@ void loop() {
     if(!isWaitEnterExitSet){
       //Start waiting for one second
       waitEnterExitStart = millis();
-      waitEnterExitCurrent = millis();
+      waitEnterExitcurrent = millis();
       isDestinationReached = 1;
       isWaitEnterExitSet = 1;
       isIdle = 1;
@@ -142,7 +168,6 @@ void loop() {
     }
 
   }
-  //Todo: -Setting an interrupt that is activated when the user pushes a button to start counting the number of milliseconds passed 
   }
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -180,6 +205,21 @@ int scanRows(int columnNumber){
     }
     else digitalWrite(i, 0);
   }
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// Dealing with switches isr
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void pushSwitch(){
+  //on the first change set bool to take a snap of the current time and set the currently pushed switch
+  if(!switchwaitSet){
+    switchwaitSet = 1;
+    pushedSwitch = 1 * int(digitalRead(9)) + 2 * int(digitalRead(8)) + 4 * int(digitalRead(7));
+  }
+  //on the second change set a bool to calculate the difference
+  else{
+    switchwaitCheck = 1;
+  }
+  
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 // Stepper Motor function

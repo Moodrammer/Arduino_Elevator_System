@@ -1,3 +1,8 @@
+//Inorder to achieve the minimum number of Rotations without causing starvation(by starvation I mean the elevator takes too long to respond to a certain request due to other calls are 
+//closer to it for example if the elevator is at 7 then it is called at 1 then while moving down it was called at 5 so it stops at 5 then before going to 1 someone called at 6 and so on),  
+//to solve this problem the logic that i followed is to finish all the requests till the last one in a certain direction either up or down then start fullfilling requests from the other direction 
+//so in the previous case if it was at 7 then it was called at 1 then before reaching 5 someone called at 5 it will stop at 5 , if then someone calls at 6 which is closer than 1 , the 
+//elevator will go to 1 first as it is on its way down then return to 6
 #define keypadColumnSize 2
 #define MotorAplus 19
 #define MotorBplus 18
@@ -50,7 +55,8 @@ void setup() {
 //BCD seven segment pins
   for(int i = 10; i <= 12; i++) pinMode(i, OUTPUT);
 //LedPin
-  pinMode(LedPin, OUTPUT);      
+  pinMode(LedPin, OUTPUT);
+      
 }
 
 void loop() {
@@ -311,7 +317,11 @@ void settargetFloor(int target){
       isGoingup = 1;
     }
     else if(target <= currentFloor){
-      goingdowntargets[target] = 1;
+      //if the elevator is not moving due to weight overload and someone calls it at the same floor
+      if((target == currentFloor) && stopElevator)
+        goingdowntargets[target] = 0;
+      else
+        goingdowntargets[target] = 1;  
     }
   }
   //if the elevator is going down
@@ -327,7 +337,12 @@ void settargetFloor(int target){
       isGoingup = 0;
     }
     else if(target >= currentFloor){
-      goinguptargets[target] = 1;
+      //if the elevator is not moving due to weight overload and someone calls it at the same floor
+      if((target == currentFloor) && stopElevator)
+        goinguptargets[target] = 0;
+       else
+        goinguptargets[target] = 1;
+        
     }
   }
 }

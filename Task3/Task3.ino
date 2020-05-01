@@ -1,8 +1,8 @@
 #define keypadColumnSize 2
-#define MotorAplus 6
-#define MotorBplus 5
-#define MotorAminus 4
-#define MotorBminus 1
+#define MotorAplus 19
+#define MotorBplus 18
+#define MotorAminus 17
+#define MotorBminus 16
 #define switchTrigger 2
 #define MotorStepsPerRevolution 32 
 //keypad varibles
@@ -36,8 +36,9 @@ bool switchwaitCheck = 0;
 
 void setup() {
 //keypad pins and switches
-  for(int i = 14; i <= 19; i++) 
-  (i< 18)? pinMode(i, OUTPUT): pinMode(i, INPUT_PULLUP);
+  for(int i = 3; i <= 6; i++) pinMode(i, OUTPUT); 
+  pinMode(0, INPUT_PULLUP);
+  pinMode(1, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(switchTrigger), pushSwitch, CHANGE);
 //Motor pins
   for(int i = MotorAminus; i <= MotorAplus; i++) pinMode(i, OUTPUT);
@@ -176,8 +177,8 @@ void loop() {
 //scans the keypad for a pressed key if no pressed key found it returns -1
 int scanKeypad(){
     int columnNumber;
-    if(!digitalRead(18)) columnNumber = 0;
-    else if(!digitalRead(19)) columnNumber = 1;
+    if(!digitalRead(0)) columnNumber = 0;
+    else if(!digitalRead(1)) columnNumber = 1;
     else{
       columnNumber = -1;
       if(iskeyread) iskeyread = 0;    
@@ -196,12 +197,12 @@ int scanKeypad(){
 }
 //Scans the rows of a certain column the rownumber of the pressed key
 int scanRows(int columnNumber){
-  for(int i = 14; i <= 17; i++){
+  for(int i = 3; i <= 6; i++){
     digitalWrite(i, 1);
-    if(digitalRead(columnNumber + 18) == 1){
+    if(digitalRead(columnNumber) == 1){
       digitalWrite(i, 0);
       iskeyread = 1;
-      return i - 14;
+      return i - 3;
     }
     else digitalWrite(i, 0);
   }

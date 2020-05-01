@@ -87,9 +87,10 @@ void loop() {
   Display(currentFloor);
 
   //Motor movement
-  if(!stopElevator){
-  //The elevator hasn't reached its destination
-    if(currentFloor != targetFloor){
+  
+//The elevator hasn't reached its destination
+  if((currentFloor != targetFloor)){
+    if(!stopElevator){
       //If the elevator reached its destination it should wait for one second
       if((waitEnterExitcurrent - waitEnterExitStart < 1000) && isDestinationReached){
         waitEnterExitcurrent = millis();
@@ -117,70 +118,72 @@ void loop() {
           revolutionSteps = MotorStepsPerRevolution;
         }
       }
-    }
-    
-    //The elevator has reached its destination
-    else{
-      if(!isWaitEnterExitSet){
-        //Start waiting for one second
-        waitEnterExitStart = millis();
-        waitEnterExitcurrent = millis();
-        isDestinationReached = 1;
-        isWaitEnterExitSet = 1;
-        isIdle = 1;
-        //Reset the currentfloor state to not called
-        (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
-      }
-          
-      //Check the new target of the elevator
-      if(isGoingup){
-        //Check if there are more floors called above
-        for(int i = currentFloor + 1; i <= 7; i++){
-          if(goinguptargets[i] == 1){
-            targetFloor = i;
-            isIdle = 0;
-            break; 
-          }
-        }
-        //Didn't find an upper target so search for a lower target  
-        if(currentFloor == targetFloor){
-          for(int i = currentFloor - 1; i >= 0; i--){
-            if(goingdowntargets[i] == 1){
-              targetFloor = i;
-              isIdle = 0;
-              //set the status to going down
-              isGoingup = 0;
-              break; 
-            }   
-          }
-        }
-     }
-    //The elevator is going down
-    else{
-      //check if there are more floors called below the currentfloor
-      for(int i = currentFloor - 1; i >= 0; i--){
-        if(goingdowntargets[i] == 1){
-          targetFloor = i;
-          isIdle = 0;
-          break; 
-        }   
-      }
-      //if there are no targets below see if there is a called target above
-      if(currentFloor == targetFloor){
-        for(int i = currentFloor + 1; i <= 7; i++){
-          if(goinguptargets[i] == 1){
-            targetFloor = i;
-            isIdle = 0;
-            //set the status to going up
-            isGoingup = 1;
-            break;
-          }
-        }      
-      }
-  
-    }
     }    
   }
+  
+  //The elevator has reached its destination
+  else{
+    if(!isWaitEnterExitSet){
+      //Start waiting for one second
+      waitEnterExitStart = millis();
+      waitEnterExitcurrent = millis();
+      isDestinationReached = 1;
+      isWaitEnterExitSet = 1;
+      isIdle = 1;
+      //Reset the currentfloor state to not called
+      (isGoingup == 1)? goinguptargets[currentFloor] = 0: goingdowntargets[currentFloor] = 0; 
+    }
+        
+    //Check the new target of the elevator
+    if(isGoingup){
+      //Check if there are more floors called above
+      for(int i = currentFloor + 1; i <= 7; i++){
+        if(goinguptargets[i] == 1){
+          targetFloor = i;
+          Serial.println(targetFloor);
+          isIdle = 0;
+          break; 
+        }
+      }
+      //Didn't find an upper target so search for a lower target  
+      if(currentFloor == targetFloor){
+        for(int i = currentFloor - 1; i >= 0; i--){
+          if(goingdowntargets[i] == 1){
+            targetFloor = i;
+            isIdle = 0;
+            //set the status to going down
+            isGoingup = 0;
+            break; 
+          }   
+        }
+      }
+   }
+  //The elevator is going down
+  else{
+    //check if there are more floors called below the currentfloor
+    for(int i = currentFloor - 1; i >= 0; i--){
+      if(goingdowntargets[i] == 1){
+        targetFloor = i;
+        isIdle = 0;
+        break; 
+      }   
+    }
+    //if there are no targets below see if there is a called target above
+    if(currentFloor == targetFloor){
+      for(int i = currentFloor + 1; i <= 7; i++){
+        if(goinguptargets[i] == 1){
+          targetFloor = i;
+          isIdle = 0;
+          //set the status to going up
+          isGoingup = 1;
+          break;
+        }
+      }      
+    }
+
+  }
+  }    
+  
   
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -289,11 +292,13 @@ void settargetFloor(int target){
       goingdowntargets[target] = 1;
       targetFloor = target;
       isGoingup = 0;
+      isIdle = 0;
     }
     else if (target > currentFloor){
       goinguptargets[target] = 1;
       targetFloor = target;
       isGoingup = 1;
+      isIdle = 0;
     }
   }
   else if(isGoingup){

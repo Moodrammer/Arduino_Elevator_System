@@ -48,7 +48,6 @@ void setup() {
   for(int i = MotorAminus; i <= MotorAplus; i++) pinMode(i, OUTPUT);
   pinMode(MotorBminus, OUTPUT);  
 //BCD seven segment pins
-  Serial.begin(9600);
   for(int i = 10; i <= 12; i++) pinMode(i, OUTPUT);
 //LedPin
   pinMode(LedPin, OUTPUT);      
@@ -76,7 +75,6 @@ void loop() {
   int keyPressed = scanKeypad();
   if(keyPressed != -1){
     //set the new target floor
-    Serial.println(keyPressed);
     settargetFloor(keyPressed);
   }
 
@@ -140,7 +138,6 @@ void loop() {
       for(int i = currentFloor + 1; i <= 7; i++){
         if(goinguptargets[i] == 1){
           targetFloor = i;
-          Serial.println(targetFloor);
           isIdle = 0;
           break; 
         }
